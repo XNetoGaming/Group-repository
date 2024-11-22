@@ -148,60 +148,57 @@ class Timer(PhaseThread):
 
 # the keypad phase
 class Keypad(PhaseThread):
-    def __init__(self, keypad, name="Keypad"):
+    def __init__(self, keypad, gui, name="Keypad"):
         super().__init__(name)
         self._value = ""
-        # the keypad pins
         self._keypad = keypad
+        self._solution = "782"  # Example: 'Secure The Bomb'
+        self._gui = gui
 
-    # runs the thread
     def run(self):
         self._running = True
-        while (True):
-            # process keys when keypad key(s) are pressed
-            if (self._keypad.pressed_keys):
-                # debounce
+        while self._running:
+            if self._keypad.pressed_keys:
                 key = self._keypad.pressed_keys[0]
                 while self._keypad.pressed_keys:
-                    sleep(0.1)    
-                # do we have an asterisk (*) (and it resets the passphrase)?
-                if (key == "*" and STAR_CLEARS_PASS):
-                    self._value = ""
-                    #only keep last 4 characters and set limit to 4
-                elif len(self._value) < 4:
-                    if key:
-                        self._value += str(key)
-                # we haven't yet reached the max pass length (otherwise, we just ignore the keypress)
-#                 elif (len(self._value) < MAX_PASS_LEN):
-#                     # log the key
-#                     self._value += str(key)
-            sleep(0.1)
-        self._running = False
+                    sleep(0.1)
 
-    def __str__(self):
-        return self._value
+                # Process key input
+                if len(self._value) < len(self._solution):
+                    self._value += str(key)
+
+                self._gui._lkeypad.config(text=f"Combination: {self._value}")
+
+                # Check if solution is correct
+                if self._value == self._solution:
+                    self._gui._lkeypad.config(text="Keypad: SOLVED!", fg="green")
+                    break
+            sleep(0.1)
+
 
 # the jumper wires phase
+
 class Wires(PhaseThread):
-    def __init__(self, pins, name="Wires"):
+    def __init__(self, pins, gui, name="Wires"):
         super().__init__(name)
         self._value = ""
-        self._binary_value = ""
-        # the jumper wire pins
         self._pins = pins
+        self._gui = gui
+        self._solution = [True, False, True, False]  # Example pattern
 
-    # runs the thread
     def run(self):
         self._running = True
-        while (True):
-            # get the jumper wire states (0->False, 1->True)
-            self._value = "".join([str(int(pin.value)) for pin in self._pins])
-            self._value = f"{self._binary_value}/{int(self._binary_value, 2)}"
-            sleep(0.1)
-        self._running = False
+        while self._running:
+            # Update wire states
+            self._value = [pin.value for pin in self._pins]
 
-    def __str__(self):
-        return f"{self._value}/{int(self._value, 2)}"
+            # Check solution
+            if self._value == self._solution:
+                self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
+                break
+
+            self._gui._lwires.config(text=f"Wires: {self._value}")
+            sleep(0.1)
 #status class
 class Status(PhaseThread):
     def __init__(self, wires, name="Status"):
@@ -225,72 +222,90 @@ class Status(PhaseThread):
         return "Triggered" if self._triggered else "Normal"
 # the pushbutton phase
 class Button(PhaseThread):
-    colors = [ "R", "G", "B" ]  # the button's possible colors
-
-    def __init__(self, state, rgb, name="Button"):
+    def __init__(self, state, rgb, gui, name="Button"):
         super().__init__(name)
         self._value = False
-        # the pushbutton's state pin
         self._state = state
-        # the pushbutton's LED pins
         self._rgb = rgb
-        #button counter
-        self._press_count = 0
-        #track previous state
-        self._previous_state = False
+        self._gui = gui
+        self._color = "Green"  # Start with green
+        self._action_done = False
 
-    # runs the thread
     def run(self):
         self._running = True
-        # initialize and index and counter to help iterate through the RGB colors
-        rgb_index = 0
-        rgb_counter = 0
-        while (True):
-            # set the LED to the current color
-            self._rgb[0].value = False if Button.colors[rgb_index] == "R" else True
-            self._rgb[1].value = False if Button.colors[rgb_index] == "G" else True
-            self._rgb[2].value = False if Button.colors[rgb_index] == "B" else True
-            # get the pushbutton's state
-            current_state = self._state.value
-            #detect button press
-            if current_state and not self._previous_state:
-                self._press_count += 1
-                self._value = True
-            elif not current_state:
-                self._value = False
-            #update previous state to current states
-            self._previous_state = current_state
-            # increment the RGB counter
-            rgb_counter += 1
-            # switch to the next RGB color every 1s (10 * 0.1s = 1s)
-            if (rgb_counter == 10):
-                rgb_index = (rgb_index + 1) % len(Button.colors)
-                rgb_counter = 0
+        while self._running:
+            if self._state.value and not self._action_done:
+                if self._color == "Green":
+                    self._gui._lbutton.config(text="Button: GREEN PRESSED", fg="green")
+                    self._action_done = True
+                elif self._color == "Blue" and timer._value % 4 == 0:
+                    self._gui._lbutton.config(text="Button: BLUE PRESSED", fg="blue")
+                    self._action_done = True
+                elif self._color == "Red" and toggles._value[-1] == "1":
+                    self._gui._lbutton.config(text="Button: RED PRESSED", fg="red")
+                    self._action_done = True
+                else:
+                    self._gui._lbutton.config(text="Button: WRONG ACTION!", fg="red")
+                    timer._value -= 10  # Penalty for wrong action
             sleep(0.1)
-        self._running = False
-
-    def __str__(self):
-        return f"Pressed {self._press_count} times" if self._value else "Released"
 
 # the toggle switches phase
 class Toggles(PhaseThread):
-    def __init__(self, pins, name="Toggles"):
+    def __init__(self, pins, gui, name="Toggles"):
         super().__init__(name)
         self._value = ""
-        # the toggle switch pins
         self._pins = pins
+        self._solution = "1000"  # Example: Third power of 2
+        self._gui = gui
+        self._timer_active = False
 
-    # runs the thread
     def run(self):
         self._running = True
-        while (True):
-            # get the toggle switch values (0->False, 1->True)
+        toggle_timer = 20  # Seconds to solve
+        while self._running:
+            # Read toggle states
             self._value = "".join([str(int(pin.value)) for pin in self._pins])
-            sleep(0.1)
+            self._gui._ltoggles.config(text=f"Toggles: {self._value}")
+
+            # Check if solution is correct
+            if self._value == self._solution:
+                self._gui._ltoggles.config(text="Toggles: SOLVED!", fg="green")
+                break
+
+            # Countdown logic
+            if toggle_timer <= 0:
+                self.reset()
+                self._gui._ltoggles.config(text="Toggles: RESET!", fg="red")
+                toggle_timer = 20
+
+            sleep(1)
+            toggle_timer -= 1
+
         self._running = False
 
-    def __str__(self):
-        return f"{self._value}/{int(self._value, 2)}"
+    def reset(self):
+        for pin in self._pins:
+            pin.value = False
+        self._value = "0000"
+        
+# Place it near the end of your class definitions
+class GameState:
+    def __init__(self):
+        self.current_phase = 1
+
+    def next_phase(self):
+        self.current_phase += 1
+
+    def check_phase(self):
+        if self.current_phase == 1:
+            return toggles
+        elif self.current_phase == 2:
+            return button
+        elif self.current_phase == 3:
+            return keypad
+        elif self.current_phase == 4:
+            return wires
+     
 
 ######
 # MAIN
@@ -363,6 +378,7 @@ button.start()
 toggles.start()
 
 # check the phase threads
+
 def check():
     # check the countdown
     if (timer._running):
@@ -390,7 +406,6 @@ def check():
 
     # check again after 100ms
     gui.after(100, check)
-
 # quits the bomb
 def quit():
     # turn off the 7-segment display

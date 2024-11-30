@@ -157,14 +157,27 @@ class Keypad(PhaseThread):
                 key = self._keypad.pressed_keys[0]
                 while self._keypad.pressed_keys:
                     sleep(0.1)
-                if len(self._value) < len(self._solution):
-                    self._value += str(key)
+
+                # Handle the input based on the key pressed
+                if key == '#':  # Delete button
+                    self._value = self._value[:-1]  # Remove the last digit
+                elif key == '*':  # Enter button
+                    if self._value:  # Only print if there is a value
+                        print(f"Entered Value: {self._value}")
+                        # Optionally reset the value after entering
+                        self._value = ""
+                else:  # Digit keys
+                    if len(self._value) < 4:  # Limit to 4 digits
+                        self._value += str(key)
+
                 self._gui._lkeypad.config(text=f"Combination: {self._value}")
+
+                # Check if the entered value matches the solution
                 if self._value == self._solution:
                     self._gui._lkeypad.config(text="Keypad: SOLVED!", fg="green")
                     break
+            
             sleep(0.1)
-
 # Wires Phase
 class Wires(PhaseThread):
     def __init__(self, pins, gui, name="Wires"):

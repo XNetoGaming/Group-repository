@@ -8,7 +8,7 @@ from adafruit_ht16k33.segments import Seg7x4
 from digitalio import DigitalInOut, Direction, Pull
 from adafruit_matrixkeypad import Matrix_Keypad
 
-# constants
+# Constants
 COUNTDOWN = 300
 MAX_PASS_LEN = 11
 STAR_CLEARS_PASS = True
@@ -18,24 +18,28 @@ class Lcd(Frame):
     def __init__(self, window):
         super().__init__(window, bg="black")
         window.after(500, window.attributes, '-fullscreen', 'True')
-        self._timer = None
-        self._button = None
         self.setup()
 
     def setup(self):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=2)
         self.pack(fill=BOTH, expand=True)
+        
         self._ltimer = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Time left: ")
         self._ltimer.grid(row=0, column=0, columnspan=2, sticky=W)
+        
         self._lkeypad = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Combination: ")
         self._lkeypad.grid(row=1, column=0, columnspan=2, sticky=W)
+        
         self._lwires = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Wires: ")
         self._lwires.grid(row=2, column=0, columnspan=2, sticky=W)
+        
         self._lbutton = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Button: ")
         self._lbutton.grid(row=3, column=0, columnspan=2, sticky=W)
+        
         self._ltoggles = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Toggles: ")
         self._ltoggles.grid(row=4, column=0, columnspan=2, sticky=W)
+        
         self._lstatus = Label(self, bg="black", fg="green", font=("Courier New", 24), text="Status Normal")
         self._lstatus.grid(row=6, column=0, columnspan=2, sticky=W)
 
@@ -50,7 +54,6 @@ class PhaseThread(Thread):
     def __init__(self, name):
         super().__init__(name=name, daemon=True)
         self._running = False
-        self._value = None
 
     def reset(self):
         self._value = None
@@ -60,7 +63,6 @@ class Timer(PhaseThread):
     def __init__(self, value, display, name="Timer"):
         super().__init__(name)
         self._value = value
-        self._initial_value = value
         self._display = display
         self._paused = False
 
@@ -75,16 +77,15 @@ class Timer(PhaseThread):
                 self.update()
                 self._display.print(str(self))
                 sleep(1)
-                if self._value == 0:
+                if self._value <= 0:
+                    self._running = False
                     break
                 self._value -= 1
             else:
                 sleep(0.1)
-        self._running = False
 
     def pause(self):
         self._paused = not self._paused
-        self._display.blink_rate = (2 if self._paused else 0)
 
     def __str__(self):
         return f"{self._min}:{self._sec}"
@@ -95,7 +96,7 @@ class Toggles(PhaseThread):
         super().__init__(name)
         self._value = ""
         self._pins = pins
-        self._solution = "1000"
+        self._solution = "1000"  # Example solution
         self._gui = gui
 
     def run(self):
@@ -107,13 +108,11 @@ class Toggles(PhaseThread):
                 self._gui._ltoggles.config(text="Toggles: SOLVED!", fg="green")
                 break
             sleep(0.1)
-        self._running = False
 
 # Button Phase
-class Button(PhaseThread):
+class Button(PhaseThread ):
     def __init__(self, state, rgb, gui, name="Button"):
         super().__init__(name)
-        self._value = False
         self._state = state
         self._rgb = rgb
         self._gui = gui
@@ -128,15 +127,14 @@ class Button(PhaseThread):
                 else:
                     self._gui._lbutton.config(text="Button: WRONG ACTION!", fg="red")
             sleep(0.1)
-        self._running = False
 
 # Keypad Phase
 class Keypad(PhaseThread):
     def __init__(self, keypad, gui, name="Keypad"):
         super().__init__(name)
-        self._value = ""
         self._keypad = keypad
-        self._solution = "782"
+        self._value = ""
+        self._solution = "782"  # Example solution
         self._gui = gui
 
     def run(self):
@@ -153,16 +151,14 @@ class Keypad(PhaseThread):
                     self._gui._lkeypad.config(text="Keypad: SOLVED!", fg="green")
                     break
             sleep(0.1)
-        self._running = False
 
 # Wires Phase
 class Wires(PhaseThread):
     def __init__(self, pins, gui, name="Wires"):
         super().__init__(name)
-        self._value = ""
         self._pins = pins
-        self._solution = [True, False, True, False]
         self._gui = gui
+        self._solution = [True, False, True, False]  # Example solution
 
     def run(self):
         self._running = True
@@ -173,7 +169,6 @@ class Wires(PhaseThread):
                 self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
                 break
             sleep(0.1)
-        self._running = False
 
 # Game State Manager
 class GameState:
@@ -235,18 +230,24 @@ keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
 matrix_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
 keypad = Keypad(matrix_keypad, gui)
 
-wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
+wire pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
 for pin in wire_pins:
     pin.direction = Direction.INPUT
     pin.pull = Pull.DOWN
 wires = Wires(wire_pins, gui)
 
+# Start all phases
 timer.start()
 toggles.start()
 button.start()
 keypad.start()
 wires.start()
 
+# Initialize game state and start the check loop
+game_state = GameState()
+check()
+window.mainloop() ```python
+# Initialize game state and start the check loop
 game_state = GameState()
 check()
 window.mainloop()

@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter
+import random
 from threading import Thread
 from time import sleep
 from random import randint
@@ -96,14 +97,27 @@ class Toggles(PhaseThread):
         super().__init__(name)
         self._value = ""
         self._pins = pins
-        self._solution = "1000"  # Example solution
         self._gui = gui
+        self._solution = self.generate_solution()  # Generate a binary solution based on a math problem
+        self._gui._ltoggles.config(text=f"Toggles: Solve the equation: {self._math_problem}")
+
+    def generate_solution(self):
+        # Generate a random math problem and calculate the solution
+        problems = [
+            ("5 + 3", 5 + 3),
+            ("10 - 2", 10 - 2),
+            ("4 * 2", 4 * 2),
+        ]
+        self._math_problem, answer = random.choice(problems)
+        # Convert the answer to a 4-digit binary string
+        binary_solution = format(answer, '04b')
+        return binary_solution
 
     def run(self):
         self._running = True
         while self._running:
             self._value = "".join([str(int(pin.value)) for pin in self._pins])
-            self._gui._ltoggles.config(text=f"Toggles: {self._value}")
+            self._gui._ltoggles.config(text=f"Toggles: {self._value} | Solve: {self._math_problem}")
             if self._value == self._solution:
                 self._gui._ltoggles.config(text="Toggles: SOLVED!", fg="green")
                 break

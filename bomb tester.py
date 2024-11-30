@@ -98,20 +98,20 @@ class Toggles(PhaseThread):
         self._value = ""
         self._pins = pins
         self._gui = gui
-        self._solution = self.generate_solution()  # Generate a binary solution based on a math problem
+        self._solution, self._math_problem = self.generate_solution()  # Generate a binary solution based on a math problem
         self._gui._ltoggles.config(text=f"Toggles: Solve the equation: {self._math_problem}")
 
     def generate_solution(self):
         # Generate a random math problem and calculate the solution
         problems = [
-            ("5 + 3", 5 + 3),
-            ("10 - 2", 10 - 2),
-            ("4 * 2", 4 * 2),
+            ("2 ** 3 + 3", 2 ** 3 + 3),  # 8 + 3 = 11
+            ("4 * 3 - 2", 4 * 3 - 2),    # 12 - 2 = 10
+            ("5 + 2 ** 2", 5 + 2 ** 2),   # 5 + 4 = 9
         ]
         self._math_problem, answer = random.choice(problems)
         # Convert the answer to a 4-digit binary string
         binary_solution = format(answer, '04b')
-        return binary_solution
+        return binary_solution, self._math_problem
 
     def run(self):
         self._running = True
@@ -122,7 +122,6 @@ class Toggles(PhaseThread):
                 self._gui._ltoggles.config(text="Toggles: SOLVED!", fg="green")
                 break
             sleep(0.1)
-
 # Button Phase
 class Button(PhaseThread ):
     def __init__(self, state, rgb, gui, name="Button"):

@@ -335,8 +335,7 @@ gui.setButton(button)
 keypad_cols = [DigitalInOut(i) for i in (board.D10, board.D9, board.D11)]
 keypad_rows = [DigitalInOut(i) for i in (board.D5, board.D6, board.D13, board.D19)]
 keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
-matrix_keypad ```python
-= Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
+matrix_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)  # Corrected line
 keypad = Keypad(matrix_keypad, gui)
 
 wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]

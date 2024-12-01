@@ -60,6 +60,68 @@ class Lcd(Frame):
     def setTimer(self, timer):
         self._timer = timer
 
+    def setfrom tkinter import *
+import tkinter
+import random
+from threading import Thread
+from time import sleep
+from random import randint
+import board
+from adafruit_ht16k33.segments import Seg7x4
+from digitalio import DigitalInOut, Direction, Pull
+from adafruit_matrixkeypad import Matrix_Keypad
+
+# Constants
+COUNTDOWN = 300
+MAX_PASS_LEN = 11
+STAR_CLEARS_PASS = True
+
+# LCD Display GUI
+class Lcd(Frame):
+    def __init__(self, window):
+        super().__init__(window, bg="black")
+        window.after(500, window.attributes, '-fullscreen', 'True')
+        self.setup()
+
+    def setup(self):
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=2)
+        self.pack(fill=BOTH, expand=True)
+        
+        self._ltimer = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Time left: ")
+        self._ltimer.grid(row=0, column=0, columnspan=2, sticky=W)
+        
+        self._lkeypad = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Combination: ")
+        self._lkeypad.grid(row=1, column=0, columnspan=2, sticky=W)
+        
+        self._lwires = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Wires: ")
+        self._lwires.grid(row=2, column=0, columnspan=2, sticky=W)
+        
+        self._lbutton = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Button: ")
+        self._lbutton.grid(row=3, column=0, columnspan=2, sticky=W)
+        
+        self._ltoggles = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Toggles: ")
+        self._ltoggles.grid(row=4, column=0, columnspan=2, sticky=W)
+        
+        self._lstatus = Label(self, bg="black", fg="green", font=("Courier New", 24), text="Status Normal")
+        self._lstatus.grid(row=6, column=0, columnspan=2, sticky=W)
+
+        # Add equation label for binary multiplication
+        self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
+
+    def setTimer(self, timer):
+        self._timer = timer
+
+    def setButton(self, button):
+        self._button = button
+
+    def update_equation(self, equation):
+        self._equation_label.config(text=f"Multiply: {equation[0]} x {equation[1]}")
+
+    def setTimer(self, timer):
+        self._timer = timer
+
     def setButton(self, button):
         self._button = button
 
@@ -207,71 +269,22 @@ class Keypad(PhaseThread):
 
             sleep(0.1)
 # Wires Phase
-class Wires:
-    def __init__(self):
-        self.wires = {
-            'A': 'Red',
-            'B': 'Blue',
-            'C': 'Green',
-            'D': 'Yellow',
-            'E': 'Black'
-        }
-
-    def cut_wire(self, wire):
-        if wire in self.wires:
-            print(f"You cut the {self.wires[wire]} wire.")
-        else:
-            print("Invalid wire selection.")
-
-class WirePhase:
-    def __init__(self):
-        self.wires = Wires()  # Correct instantiation with no arguments
-        self.questions = [
-            {
-                "question": "Which of the following are prime numbers?",
-                "choices": ["A) 2", "B) 4", "C) 5", "D) 9", "E) 11"],
-                "correct": ["A", "C", "E"]
-            },
-            {
-                "question": "Which of the following can be broken but never held?",
-                "choices": ["A) Promise", "B) Heart", "C) Glass", "D) Silence", "E) Trust"],
-                "correct": ["A", "D", "E"]
-            },
-            {
-                "question": "Which of the following are fruits?",
-                "choices": ["A) Apple", "B) Carrot", "C) Banana", "D) Potato", "E) Grape"],
-                "correct": ["A", "C", "E"]
-            },
-            {
-                "question": "Which of the following are even numbers?",
-                "choices": ["A) 2", "B) 3", "C) 4", "D) 5", "E) 6"],
-                "correct": ["A", "C", "E"]
-            }
-        ]
-
-    def select_question(self):
-        return random.choice(self.questions)
-
-    def display_question(self, question):
-        print(question["question"])
-        for choice in question["choices"]:
-            print(choice)
-
-    def check_answer(self, user_choices, correct_choices):
-        return sorted(user_choices) == sorted(correct_choices)
+class Wires(PhaseThread):
+    def __init__(self, pins, gui, name="Wires"):
+        super().__init__(name)
+        self._pins = pins
+        self._gui = gui
+        self._solution = [True, False, True, False]  # Example solution
 
     def run(self):
-        question = self.select_question()
-        self.display_question(question)
-
-        user_choices = input("Select the correct letter choices (comma separated, e.g., A,B): ").split(',')
-
-        if self.check_answer(user_choices, question["correct"]):
-            print("Correct! You can cut the wires.")
-            for wire in user_choices:
-                self.wires.cut_wire(wire)  # Cut the selected wires
-        else:
-            print("Incorrect! You should not cut those wires.")
+        self._running = True
+        while self._running:
+            self._value = [pin.value for pin in self._pins]
+            self._gui._lwires.config(text=f"Wires: {self._value}")
+            if self._value == self._solution:
+                self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
+                break
+            sleep(0.1)
 
 # Game State Manager
 class GameState:
@@ -333,23 +346,21 @@ keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
 matrix_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
 keypad = Keypad(matrix_keypad, gui)
 
-wire pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
+wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
 for pin in wire_pins:
     pin.direction = Direction.INPUT
     pin.pull = Pull.DOWN
 wires = Wires(wire_pins, gui)
 
-# Start all phases
 timer.start()
 toggles.start()
 button.start()
 keypad.start()
 wires.start()
 
-# Initialize game state and start the check loop
 game_state = GameState()
 check()
-window.mainloop() ```python
+window.mainloop()loop() ```python
 # Initialize game state and start the check loop
 game_state = GameState()
 check()

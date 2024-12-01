@@ -223,6 +223,8 @@ class Wires(PhaseThread):
         super().__init__(name)
         self._pins = pins
         self._gui = gui
+        
+        # Define a list of questions
         self._questions = [
             {
                 "question": "What year was the University of Tampa founded?",
@@ -245,9 +247,14 @@ class Wires(PhaseThread):
                 "correct": "C"
             }
         ]
-        self._current_question = random.choice(self._questions)  # Select a random question
-        self._gui._lwires.config(text=self._current_question["question"])  # Display the question
-        self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the choices
+        
+        # Select a random question
+        self._current_question = random.choice(self._questions)
+        
+        # Display the question and choices
+        self._gui._lwires.config(text=self._current_question["question"])
+        self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))
+        
         self._initial_state = True  # Indicates if all wires are intact
         self._running = True
 
@@ -260,8 +267,9 @@ class Wires(PhaseThread):
             # Check if all wires are intact (assuming True means intact)
             if all(pin.value for pin in self._pins):  # If all wires are intact (True)
                 self._initial_state = True
-                self._gui._lwires.config(text=self._current_question["question"])  # Display the question
-                self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the choices
+                # Display the current question again if needed
+                self._gui._lwires.config(text=self._current_question["question"])
+                self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))
             else:
                 self._initial_state = False  # At least one wire is cut
 
@@ -278,7 +286,9 @@ class Wires(PhaseThread):
                         print(f"Wrong wire cut: {selected_wire}")  # Debugging line
                     
                     sleep(2)  # Pause for a moment to show the result
-                    self._current_question = random.choice(self._questions)  # Select a new random question
+                    
+                    # Select a new random question
+                    self._current_question = random.choice(self._questions)
                     self._gui._lwires.config(text=self._current_question["question"])  # Display the new question
                     self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the new choices
                     break  # Exit the loop after one wire cut

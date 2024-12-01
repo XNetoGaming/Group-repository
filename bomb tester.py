@@ -212,17 +212,33 @@ class Wires(PhaseThread):
         super().__init__(name)
         self._pins = pins
         self._gui = gui
-        self._question, self._choices, self._correct_answer = self.generate_question()
-        self._gui._lwires.config(text=self._question)  # Display the question on the GUI
+        self._questions = [
+            {
+                "question": "What year was the University of Tampa founded?",
+                "choices": ["A. 1940", "B. 1931", "C. 1933", "D. 1924", "E. 2005"],
+                "correct": "B"
+            },
+            {
+                "question": "What was the cause of the first ever computer bug?",
+                "choices": ["A. Syntax error", "B. Logic error", "C. Server crash", "D. A real life bug", "E. None of the above"],
+                "correct": "D"
+            },
+            {
+                "question": "What was the first school with a computer science program?",
+                "choices": ["A. Harvard", "B. UPenn", "C. Princeton", "D. MIT", "E. Cambridge"],
+                "correct": "E"
+            },
+            {
+                "question": "Who is considered the first ever programmer?",
+                "choices": ["A. Rohan Khanad", "B. Murot Yildiz", "C. Ada Lovelace", "D. Dr. Kancharla", "E. Ricardo Almeida"],
+                "correct": "C"
+            }
+        ]
+        self._current_question = random.choice(self._questions)  # Select a random question
+        self._gui._lwires.config(text=self._current_question["question"])  # Display the question
+        self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the choices
         self._initial_state = True  # Indicates if all wires are intact
         self._running = True
-
-    def generate_question(self):
-        # Create a question and possible answers
-        question = "Which wire should be cut?"
-        choices = ["A. Red", "B. Blue", "C. Green", "D. Yellow", "E. Black"]
-        correct_answer = "C"  # Let's say the correct answer is C (Green wire)
-        return question, choices, correct_answer
 
     def run(self):
         while self._running:
@@ -233,7 +249,8 @@ class Wires(PhaseThread):
             # Check if all wires are intact (assuming True means intact)
             if all(pin.value for pin in self._pins):  # If all wires are intact (True)
                 self._initial_state = True
-                self._gui._lwires.config(text=self._question)  # Display the question
+                self._gui._lwires.config(text=self._current_question["question"])  # Display the question
+                self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the choices
             else:
                 self._initial_state = False  # At least one wire is cut
 
@@ -242,7 +259,7 @@ class Wires(PhaseThread):
                 if not pin.value:  # If this wire is cut (False)
                     selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
                     print(f"Detected cut on wire: {selected_wire}")  # Debugging line
-                    if selected_wire == self._correct_answer:
+                    if selected_wire == self._current_question["correct"]:
                         self._gui._lwires.config(text="Wires: SOLVED! Correct wire cut.", fg="green")
                         print("Correct wire cut!")  # Debugging line
                     else:
@@ -250,7 +267,9 @@ class Wires(PhaseThread):
                         print(f"Wrong wire cut: {selected_wire}")  # Debugging line
                     
                     sleep(2)  # Pause for a moment to show the result
-                    self._gui._lwires.config(text=self._question)  # Show the question again
+                    self._current_question = random.choice(self._questions)  # Select a new random question
+                    self._gui._lwires.config(text=self._current_question["question"])  # Display the new question
+                    self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))  # Display the new choices
                     break  # Exit the loop after one wire cut
 
             sleep(0.1)

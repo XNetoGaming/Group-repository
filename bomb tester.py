@@ -224,11 +224,25 @@ class Wires(PhaseThread):
         }
         self.questions = [
             {
-                "question": "Which wires should be cut? (Select A, B, C, D, E)",
-                "choices": ["A", "B", "C", "D", "E"],
-                "correct": ["A", "C"]  # Example correct answer
+                "question": "Which wire should be cut if the last wire is red?",
+                "choices": ["A. Red", "B. Blue", "C. Green", "D. Yellow"],
+                "correct": "A"  # Correct answer is A (Red)
             },
-            # You can add more questions here
+            {
+                "question": "If there are two blue wires, which one should be cut?",
+                "choices": ["A. First Blue", "B. Second Blue", "C. Red", "D. Green"],
+                "correct": "B"  # Correct answer is B (Second Blue)
+            },
+            {
+                "question": "Cut the wire that is not blue or red.",
+                "choices": ["A. Blue", "B. Red", "C. Green", "D. Yellow"],
+                "correct": "D"  # Correct answer is D (Yellow)
+            },
+            {
+                "question": "Which wire should be cut if the first wire is black?",
+                "choices": ["A. Red", "B. Black", "C. Green", "D. Yellow"],
+                "correct": "C"  # Correct answer is C (Green)
+            }
         ]
 
     def select_question(self):

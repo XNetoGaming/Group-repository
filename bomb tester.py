@@ -60,68 +60,6 @@ class Lcd(Frame):
     def setTimer(self, timer):
         self._timer = timer
 
-    def setfrom tkinter import *
-import tkinter
-import random
-from threading import Thread
-from time import sleep
-from random import randint
-import board
-from adafruit_ht16k33.segments import Seg7x4
-from digitalio import DigitalInOut, Direction, Pull
-from adafruit_matrixkeypad import Matrix_Keypad
-
-# Constants
-COUNTDOWN = 300
-MAX_PASS_LEN = 11
-STAR_CLEARS_PASS = True
-
-# LCD Display GUI
-class Lcd(Frame):
-    def __init__(self, window):
-        super().__init__(window, bg="black")
-        window.after(500, window.attributes, '-fullscreen', 'True')
-        self.setup()
-
-    def setup(self):
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=2)
-        self.pack(fill=BOTH, expand=True)
-        
-        self._ltimer = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Time left: ")
-        self._ltimer.grid(row=0, column=0, columnspan=2, sticky=W)
-        
-        self._lkeypad = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Combination: ")
-        self._lkeypad.grid(row=1, column=0, columnspan=2, sticky=W)
-        
-        self._lwires = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Wires: ")
-        self._lwires.grid(row=2, column=0, columnspan=2, sticky=W)
-        
-        self._lbutton = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Button: ")
-        self._lbutton.grid(row=3, column=0, columnspan=2, sticky=W)
-        
-        self._ltoggles = Label(self, bg="black", fg="white", font=("Courier New", 24), text="Toggles: ")
-        self._ltoggles.grid(row=4, column=0, columnspan=2, sticky=W)
-        
-        self._lstatus = Label(self, bg="black", fg="green", font=("Courier New", 24), text="Status Normal")
-        self._lstatus.grid(row=6, column=0, columnspan=2, sticky=W)
-
-        # Add equation label for binary multiplication
-        self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
-        self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
-
-    def setTimer(self, timer):
-        self._timer = timer
-
-    def setButton(self, button):
-        self._button = button
-
-    def update_equation(self, equation):
-        self._equation_label.config(text=f"Multiply: {equation[0]} x {equation[1]}")
-
-    def setTimer(self, timer):
-        self._timer = timer
-
     def setButton(self, button):
         self._button = button
 
@@ -269,7 +207,7 @@ class Keypad(PhaseThread):
 
             sleep(0.1)
 # Wires Phase
-class WirePhase(PhaseThread):
+class Wires(PhaseThread):
     def __init__(self, gui, name="WirePhase"):
         super().__init__(name)
         self._gui = gui
@@ -394,10 +332,6 @@ button.start()
 keypad.start()
 wires.start()
 
-game_state = GameState()
-check()
-window.mainloop()loop() ```python
-# Initialize game state and start the check loop
 game_state = GameState()
 check()
 window.mainloop()

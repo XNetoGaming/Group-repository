@@ -147,11 +147,28 @@ class Keypad(PhaseThread):
         super().__init__(name)
         self._keypad = keypad
         self._value = ""
-        self._solution = "782"  # Example solution
+        self._equation, self._solution = self.generate_equation()  # Generate equation and solution
         self._gui = gui
+
+    def generate_equation(self):
+        # Generate equations until we find one with a 4-digit decimal result
+        while True:
+            # Generate two random binary numbers
+            num1 = bin(random.randint(1, 255))[2:]  # Random binary number (1-255)
+            num2 = bin(random.randint(1, 255))[2:]  # Random binary number (1-255)
+            
+            # Calculate the decimal result
+            decimal_result = int(num1, 2) * int(num2, 2)
+            
+            # Check if the result is a 4-digit number
+            if 1000 <= decimal_result <= 9999:
+                return (num1, num2), decimal_result
 
     def run(self):
         self._running = True
+        # Display the equation next to the keypad
+        self._gui._equation_label.config(text=f"Multiply: {self._equation[0]} x {self._equation[1]}")
+
         while self._running:
             if self._keypad.pressed_keys:
                 key = self._keypad.pressed_keys[0]
@@ -163,20 +180,18 @@ class Keypad(PhaseThread):
                     self._value = self._value[:-1]  # Remove the last digit
                 elif key == '*':  # Enter button
                     if self._value:  # Only print if there is a value
-                        print(f"Entered Value: {self._value}")
-                        # Optionally reset the value after entering
-                        self._value = ""
+                        if int(self._value) == self._solution:
+                            self._gui._lkeypad.config(text="Keypad: SOLVED!", fg="green")
+                            break
+                        else:
+                            self._gui._lkeypad.config(text="Incorrect! Try Again.", fg="red")
+                            self._value = ""  # Reset value on incorrect entry
                 else:  # Digit keys
                     if len(self._value) < 4:  # Limit to 4 digits
                         self._value += str(key)
 
                 self._gui._lkeypad.config(text=f"Combination: {self._value}")
 
-                # Check if the entered value matches the solution
-                if self._value == self._solution:
-                    self._gui._lkeypad.config(text="Keypad: SOLVED!", fg="green")
-                    break
-            
             sleep(0.1)
 # Wires Phase
 class Wires(PhaseThread):

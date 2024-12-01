@@ -269,22 +269,58 @@ class Keypad(PhaseThread):
 
             sleep(0.1)
 # Wires Phase
-class Wires(PhaseThread):
-    def __init__(self, pins, gui, name="Wires"):
+class WirePhase(PhaseThread):
+    def __init__(self, gui, name="WirePhase"):
         super().__init__(name)
-        self._pins = pins
         self._gui = gui
-        self._solution = [True, False, True, False]  # Example solution
+        self.wires = {
+            'A': 'Red',
+            'B': 'Blue',
+            'C': 'Green',
+            'D': 'Yellow',
+            'E': 'Black'
+        }
+        self.questions = [
+            {
+                "question": "Which wires should be cut? (Select A, B, C, D, E)",
+                "choices": ["A", "B", "C", "D", "E"],
+                "correct": ["A", "C"]  # Example correct answer
+            },
+            # You can add more questions here
+        ]
+
+    def select_question(self):
+        return random.choice(self.questions)
+
+    def display_question(self):
+        question = self.select_question()
+        self._gui._lwires.config(text=question["question"])
+        print("Choices:", ', '.join(question["choices"]))  # Print choices to console
+
+        user_input = input("Select the correct letters (comma separated, e.g., A,B): ")
+        user_choices = [choice.strip().upper() for choice in user_input.split(',')]
+        
+        if self.check_answer(user_choices, question["correct"]):
+            self._gui._lwires.config(text="Correct! You can cut the wires.", fg="green")
+            for wire in user_choices:
+                self.cut_wire(wire)  # Cut the selected wires
+        else:
+            self._gui._lwires.config(text="Incorrect! You should not cut those wires.", fg="red")
+
+    def check_answer(self, user_choices, correct_choices):
+        return sorted(user_choices) == sorted(correct_choices)
+
+    def cut_wire(self, wire):
+        if wire in self.wires:
+            print(f"You cut the {self.wires[wire]} wire.")
+        else:
+            print("Invalid wire selection.")
 
     def run(self):
         self._running = True
         while self._running:
-            self._value = [pin.value for pin in self._pins]
-            self._gui._lwires.config(text=f"Wires: {self._value}")
-            if self._value == self._solution:
-                self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
-                break
-            sleep(0.1)
+            self.display_question()
+            sleep(2)  # Wait a bit before the next question
 
 # Game State Manager
 class GameState:

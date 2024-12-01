@@ -225,7 +225,7 @@ class Wires:
 
 class WirePhase:
     def __init__(self):
-        self.wires = Wires()  # Create an instance of the Wires class
+        self.wires = Wires()  # Correct instantiation with no arguments
         self.questions = [
             {
                 "question": "Which of the following are prime numbers?",
@@ -260,7 +260,8 @@ class WirePhase:
     def check_answer(self, user_choices, correct_choices):
         return sorted(user_choices) == sorted(correct_choices)
 
-    def run(self, question) = self.select_question()
+    def run(self):
+        question = self.select_question()
         self.display_question(question)
 
         user_choices = input("Select the correct letter choices (comma separated, e.g., A,B): ").split(',')

@@ -214,6 +214,8 @@ class Wires(PhaseThread):
         self._gui = gui
         self._question, self._choices, self._correct_answer = self.generate_question()
         self._gui._lwires.config(text=self._question)  # Display the question on the GUI
+        self._initial_state = True  # Indicates if all wires are intact
+        self._running = True
 
     def generate_question(self):
         # Create a question and possible answers
@@ -223,25 +225,39 @@ class Wires(PhaseThread):
         return question, choices, correct_answer
 
     def run(self):
-        self._running = True
         while self._running:
             # Read wire states
             self._value = [pin.value for pin in self._pins]
-            self._gui._lwires.config(text=f"Wires: {self._value}")
+            self._gui._lwires.config(text=f"Wires: {self._value}")  # Show current wire states
+            
+            # Check if all wires are intact
+            if all(not pin.value for pin in self._pins):  # If all wires are intact (False)
+                self._initial_state = True
+                self._gui._lwires.config(text=self._question)  # Display the question
+            else:
+                self._initial_state = False  # At least one wire is cut
 
             # Check if any wire is cut (assuming active high means cut)
             for index, pin in enumerate(self._pins):
                 if pin.value:  # If this wire is cut (True)
                     selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
+                    print(f"Detected cut on wire: {selected_wire}")  # Debugging line
                     if selected_wire == self._correct_answer:
                         self._gui._lwires.config(text="Wires: SOLVED! Correct wire cut.", fg="green")
+                        print("Correct wire cut!")  # Debugging line
                     else:
                         self._gui._lwires.config(text=f"Wires: WRONG! Cut {selected_wire}. Try again.", fg="red")
+                        print(f"Wrong wire cut: {selected_wire}")  # Debugging line
+                    
                     sleep(2)  # Pause for a moment to show the result
                     self._gui._lwires.config(text=self._question)  # Show the question again
                     break  # Exit the loop after one wire cut
 
             sleep(0.1)
+
+    def stop(self):
+        self._running = False  # Method to stop the thread safely
+        
 # Game State Manager
 class GameState:
     def __init__(self):

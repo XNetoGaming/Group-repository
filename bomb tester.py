@@ -47,6 +47,10 @@ class Lcd(Frame):
         # Add equation label for binary multiplication
         self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
         self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
+        
+        # Add a label for displaying questions
+        self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._lquestion.grid(row=7, column=0, columnspan=2, sticky=W)
 
     def setTimer(self, timer):
         self._timer = timer

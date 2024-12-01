@@ -207,8 +207,25 @@ class Keypad(PhaseThread):
 
             sleep(0.1)
 # Wires Phase
+class Wires:
+    def __init__(self):
+        self.wires = {
+            'A': 'Red',
+            'B': 'Blue',
+            'C': 'Green',
+            'D': 'Yellow',
+            'E': 'Black'
+        }
+
+    def cut_wire(self, wire):
+        if wire in self.wires:
+            print(f"You cut the {self.wires[wire]} wire.")
+        else:
+            print("Invalid wire selection.")
+
 class WirePhase:
     def __init__(self):
+        self.wires = Wires()  # Create an instance of the Wires class
         self.questions = [
             {
                 "question": "Which of the following are prime numbers?",
@@ -231,10 +248,8 @@ class WirePhase:
                 "correct": ["A", "C", "E"]
             }
         ]
-        self.selected_choices = []
 
     def select_question(self):
-        # Randomly select one question
         return random.choice(self.questions)
 
     def display_question(self, question):
@@ -245,15 +260,15 @@ class WirePhase:
     def check_answer(self, user_choices, correct_choices):
         return sorted(user_choices) == sorted(correct_choices)
 
-    def run(self):
-        question = self.select_question()
+    def run(self, question) = self.select_question()
         self.display_question(question)
 
-        # Simulate user input (you can replace this with actual user input handling)
         user_choices = input("Select the correct letter choices (comma separated, e.g., A,B): ").split(',')
 
         if self.check_answer(user_choices, question["correct"]):
             print("Correct! You can cut the wires.")
+            for wire in user_choices:
+                self.wires.cut_wire(wire)  # Cut the selected wires
         else:
             print("Incorrect! You should not cut those wires.")
 

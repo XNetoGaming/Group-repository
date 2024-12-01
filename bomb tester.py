@@ -48,6 +48,14 @@ class Lcd(Frame):
         self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
         self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
 
+        # New label for displaying the question
+        self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._lquestion.grid(row=7, column=0, columnspan=2, sticky=W)
+
+        # New label for displaying the answer choices
+        self._lwires_choices = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._lwires_choices.grid(row=8, column=0, columnspan=2, sticky=W)
+
     def setTimer(self, timer):
         self._timer = timer
 
@@ -60,8 +68,11 @@ class Lcd(Frame):
     def setTimer(self, timer):
         self._timer = timer
 
-    def setButton(self, button):
-        self._button = button
+    def display_question(self, question):
+        self._lquestion.config(text=question)
+
+    def display_choices(self, choices):
+        self._lwires_choices.config(text="\n".join(choices))
 
 # Base Phase Thread
 class PhaseThread(Thread):

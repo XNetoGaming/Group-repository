@@ -212,16 +212,35 @@ class Wires(PhaseThread):
         super().__init__(name)
         self._pins = pins
         self._gui = gui
-        self._solution = [True, False, True, False]  # Example solution
+        self._question, self._choices, self._correct_answer = self.generate_question()
+        self._gui._lwires.config(text=self._question)  # Display the question on the GUI
+
+    def generate_question(self):
+        # Create a question and possible answers
+        question = "Which wire should be cut?"
+        choices = ["A. Red", "B. Blue", "C. Green", "D. Yellow", "E. Black"]
+        correct_answer = "C"  # Let's say the correct answer is C (Green wire)
+        return question, choices, correct_answer
 
     def run(self):
         self._running = True
         while self._running:
+            # Read wire states
             self._value = [pin.value for pin in self._pins]
             self._gui._lwires.config(text=f"Wires: {self._value}")
-            if self._value == self._solution:
-                self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
-                break
+
+            # Check if any wire is cut (assuming active high means cut)
+            for index, pin in enumerate(self._pins):
+                if pin.value:  # If this wire is cut
+                    selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
+                    if selected_wire == self._correct_answer:
+                        self._gui._lwires.config(text="Wires: SOLVED! Correct wire cut.", fg="green")
+                    else:
+                        self._gui._lwires.config(text=f"Wires: WRONG! Cut {selected_wire}. Try again.", fg="red")
+                    sleep(2)  # Pause for a moment to show the result
+                    self._gui._lwires.config(text=self._question)  # Show the question again
+                    break  # Exit the loop after one wire cut
+
             sleep(0.1)
 
 # Game State Manager

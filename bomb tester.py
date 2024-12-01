@@ -44,6 +44,19 @@ class Lcd(Frame):
         self._lstatus = Label(self, bg="black", fg="green", font=("Courier New", 24), text="Status Normal")
         self._lstatus.grid(row=6, column=0, columnspan=2, sticky=W)
 
+        # Add equation label for binary multiplication
+        self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
+
+    def setTimer(self, timer):
+        self._timer = timer
+
+    def setButton(self, button):
+        self._button = button
+
+    def update_equation(self, equation):
+        self._equation_label.config(text=f"Multiply: {equation[0]} x {equation[1]}")
+
     def setTimer(self, timer):
         self._timer = timer
 

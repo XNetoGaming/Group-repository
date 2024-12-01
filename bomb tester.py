@@ -231,7 +231,7 @@ class Wires(PhaseThread):
 
             # Check if any wire is cut (assuming active high means cut)
             for index, pin in enumerate(self._pins):
-                if pin.value:  # If this wire is cut
+                if pin.value:  # If this wire is cut (True)
                     selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
                     if selected_wire == self._correct_answer:
                         self._gui._lwires.config(text="Wires: SOLVED! Correct wire cut.", fg="green")
@@ -242,7 +242,6 @@ class Wires(PhaseThread):
                     break  # Exit the loop after one wire cut
 
             sleep(0.1)
-
 # Game State Manager
 class GameState:
     def __init__(self):

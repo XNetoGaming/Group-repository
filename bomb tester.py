@@ -52,6 +52,9 @@ class Lcd(Frame):
         self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
         self._lquestion.grid(row=7, column=0, columnspan=2, sticky=W)
 
+    def set_question(self, question_text):
+        self._lquestion.config(text=question_text)
+
     def setTimer(self, timer):
         self._timer = timer
 

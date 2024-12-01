@@ -230,16 +230,16 @@ class Wires(PhaseThread):
             self._value = [pin.value for pin in self._pins]
             self._gui._lwires.config(text=f"Wires: {self._value}")  # Show current wire states
             
-            # Check if all wires are intact
-            if all(not pin.value for pin in self._pins):  # If all wires are intact (False)
+            # Check if all wires are intact (assuming True means intact)
+            if all(pin.value for pin in self._pins):  # If all wires are intact (True)
                 self._initial_state = True
                 self._gui._lwires.config(text=self._question)  # Display the question
             else:
                 self._initial_state = False  # At least one wire is cut
 
-            # Check if any wire is cut (assuming active high means cut)
+            # Check if any wire is cut (assuming False means cut)
             for index, pin in enumerate(self._pins):
-                if pin.value:  # If this wire is cut (True)
+                if not pin.value:  # If this wire is cut (False)
                     selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
                     print(f"Detected cut on wire: {selected_wire}")  # Debugging line
                     if selected_wire == self._correct_answer:

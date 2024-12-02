@@ -49,11 +49,11 @@ class Lcd(Frame):
         self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
 
         # New label for displaying the question
-        self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 12), text="")
         self._lquestion.grid(row=7, column=0, columnspan=2, sticky=W)
 
         # New label for displaying the answer choices
-        self._lwires_choices = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
+        self._lwires_choices = Label(self, bg="black", fg="white", font=("Courier New", 18), text="")
         self._lwires_choices.grid(row=8, column=0, columnspan=2, sticky=W)
 
     def setTimer(self, timer):
@@ -294,8 +294,7 @@ class Wires(PhaseThread):
             sleep(0.1)
 
     def stop(self):
-        self._running = False  # Method to stop the thread safely
-        
+        self._running = False  # Method to stop the thread safely       
 # Game State Manager
 class GameState:
     def __init__(self):
@@ -356,7 +355,7 @@ keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
 matrix_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
 keypad = Keypad(matrix_keypad, gui)
 
-wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
+wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23, board.D24)]
 for pin in wire_pins:
     pin.direction = Direction.INPUT
     pin.pull = Pull.DOWN

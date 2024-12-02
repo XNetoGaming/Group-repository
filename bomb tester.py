@@ -147,23 +147,77 @@ class Toggles(PhaseThread):
                 break
             sleep(0.1)
 # Button Phase
-class Button(PhaseThread ):
+class Button(PhaseThread):
     def __init__(self, state, rgb, gui, name="Button"):
         super().__init__(name)
         self._state = state
         self._rgb = rgb
         self._gui = gui
-        self._color = "Green"
+        self._color = "Green"  # Initial color
+        self._running = False
+        self._last_press_time = 0
+        self._press_count = 0
+        self._game_started = False  # Track if the game has started
+
+    def change_button_color(self, color):
+        # Change the button color based on the game state
+        if color == "Green":
+            self._gui._lbutton.config(text="Button: GREEN", fg="green")
+            # Set RGB pins to green
+            for pin in self._rgb:
+                pin.value = True
+        elif color == "Blue":
+            self._gui._lbutton.config(text="Button: BLUE", fg="blue")
+            # Set RGB pins to blue
+            for pin in self._rgb:
+                pin.value = False  # Adjust as needed for blue
+        elif color == "Red":
+            self._gui._lbutton.config(text="Button: RED", fg="red")
+            # Set RGB pins to red
+            for pin in self._rgb:
+                pin.value = False  # Adjust as needed for red
 
     def run(self):
         self._running = True
+        self.change_button_color("Green")  # Start with green color
         while self._running:
-            if self._state.value:
-                if self._color == "Green":
-                    self._gui._lbutton.config(text="Button: GREEN PRESSED", fg="green")
+            if self._state.value:  # Button pressed
+                current_time = time.time()
+                
+                # Check for double press
+                if current_time - self._last_press_time < 0.5:  # 500 ms for double press
+                    self._press_count += 1
                 else:
-                    self._gui._lbutton.config(text="Button: WRONG ACTION!", fg="red")
+                    self._press_count = 1  # Reset count if too much time has passed
+
+                self._last_press_time = current_time
+
+                if self._press_count == 1:
+                    if not self._game_started:  # If game hasn't started
+                        self.start_game()
+                    elif self._game_started and not game_state.current_phase == 1:  # If game is running and not in the first phase
+                        self.resume_game()
+                elif self._press_count == 2:
+                    if self._game_started and not game_state.current_phase == 1:  # If game is running
+                        self.pause_game()
+
             sleep(0.1)
+
+    def start_game(self):
+        self._game_started = True
+        self.change_button_color("Blue")  # Change to blue when game starts
+        print("Game started!")
+
+    def pause_game(self):
+        self._running = False  # Stop the button thread
+        self.change_button_color("Red")  # Change to red when paused
+        print("Game paused!")
+
+    def resume_game(self):
+        self._running = True  # Restart the button thread
+        self.change_button_color("Blue")  # Change back to blue when resumed
+        print("Game resumed!")
+
 
 # Keypad Phase
 class Keypad(PhaseThread):

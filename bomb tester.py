@@ -148,75 +148,102 @@ class Toggles(PhaseThread):
             sleep(0.1)
 # Button Phase
 class Button(PhaseThread):
+    colors = ["G", "B", "R"]  # the button's possible colors: Green, Blue, Red
+
     def __init__(self, state, rgb, gui, name="Button"):
         super().__init__(name)
-        self._state = state
-        self._rgb = rgb
-        self._gui = gui
-        self._color = "Green"  # Initial color
-        self._running = False
-        self._last_press_time = 0
-        self._press_count = 0
-        self._game_started = False  # Track if the game has started
+        self._value = False
+        self._state = state  # the pushbutton's state pin
+        self._rgb = rgb  # the pushbutton's LED pins
+        self._press_count = 0  # button press counter
+        self._previous_state = False  # track previous state
+        self._game_started = False  # track if the game has started
+        self._gui = gui  # reference to the GUI for updating button status
 
-    def change_button_color(self, color):
-        # Change the button color based on the game state
-        if color == "Green":
-            self._gui._lbutton.config(text="Button: GREEN", fg="green")
-            # Set RGB pins to green
-            for pin in self._rgb:
-                pin.value = True
-        elif color == "Blue":
-            self._gui._lbutton.config(text="Button: BLUE", fg="blue")
-            # Set RGB pins to blue
-            for pin in self._rgb:
-                pin.value = False  # Adjust as needed for blue
-        elif color == "Red":
-            self._gui._lbutton.config(text="Button: RED", fg="red")
-            # Set RGB pins to red
-            for pin in self._rgb:
-                pin.value = False  # Adjust as needed for red
-
+    # runs the thread
     def run(self):
         self._running = True
-        self.change_button_color("Green")  # Start with green color
+        rgb_index = 0  # start with the first color (Green)
+        rgb_counter = 0  # counter for color change timing
+
         while self._running:
-            if self._state.value:  # Button pressed
-                current_time = time.time()
-                
-                # Check for double press
-                if current_time - self._last_press_time < 0.5:  # 500 ms for double press
-                    self._press_count += 1
-                else:
-                    self._press_count = 1  # Reset count if too much time has passed
-
-                self._last_press_time = current_time
-
-                if self._press_count == 1:
-                    if not self._game_started:  # If game hasn't started
-                        self.start_game()
-                    elif self._game_started and not game_state.current_phase == 1:  # If game is running and not in the first phase
-                        self.resume_game()
-                elif self._press_count == 2:
-                    if self._game_started and not game_state.current_phase == 1:  # If game is running
-                        self.pause_game()
-
+            # Set the LED to the current color
+            self._rgb[0].value = False if Button.colors[rgb_index] == "R" else True
+            self._rgb[1].value = False if Button.colors[rgb_index] == "G" else True
+            self._rgb[2].value = False if Button.colors[rgb_index] == "B" else True
+            
+            # Get the pushbutton's state
+            current_state = self._state.value
+            
+            # Detect button press
+            if current_state and not self._previous_state:
+                self._press_count += 1
+                self._value = True
+                self.handle_button_press()  # Handle the button press logic
+            elif not current_state:
+                self._value = False
+            
+            # Update previous state to current state
+            self._previous_state = current_state
+            
+            # Increment the RGB counter
+            rgb_counter += 1
+            
+            # Switch to the next RGB color every 1s (10 * 0.1s = 1s)
+            if rgb_counter == 10:
+                rgb_index = (rgb_index + 1) % len(Button.colors)
+                rgb_counter = 0
+            
             sleep(0.1)
+
+    def handle_button_press(self):
+        current_time = time.time()
+        
+        # Check for double press
+        if self._press_count == 1:
+            if not self._game_started:  # If game hasn't started
+                self.start_game()
+            else:  # If game is running, resume
+                self.resume_game()
+        elif self._press_count == 2:
+            if self._game_started:  # If game is running, pause
+                self.pause_game()
 
     def start_game(self):
         self._game_started = True
-        self.change_button_color("Blue")  # Change to blue when game starts
+        self.change_button_color("B")  # Change to blue when game starts
+        self._gui._lbutton.config(text="Button: BLUE", fg="blue")  # Update GUI
         print("Game started!")
 
     def pause_game(self):
         self._running = False  # Stop the button thread
-        self.change_button_color("Red")  # Change to red when paused
+        self.change_button_color("R")  # Change to red when paused
+        self._gui._lbutton.config(text="Button: RED", fg="red")  # Update GUI
         print("Game paused!")
 
     def resume_game(self):
         self._running = True  # Restart the button thread
-        self.change_button_color("Blue")  # Change back to blue when resumed
+        self.change_button_color("B")  # Change back to blue when resumed
+        self._gui._lbutton.config(text="Button: BLUE", fg="blue")  # Update GUI
         print("Game resumed!")
+
+    def change_button_color(self, color):
+        # Change the button color based on the game state
+        if color == "G":
+            self._rgb[0].value = True  # Red LED off
+            self._rgb[1].value = True  # Green LED on
+            self._rgb[2].value = True  # Blue LED off
+        elif color == "B":
+            self._rgb[0].value = False  # Red LED off
+            self._rgb[1].value = False  # Green LED off
+            self._rgb[2].value = True  # Blue LED on
+        elif color == "R":
+            self._rgb[0].value = False  # Red LED on
+            self._rgb[1].value = True  # Green LED off
+            self._rgb[2].value = True  # Blue LED off
+
+    def __str__(self):
+        return f"Pressed {self._press_count} times" if self._value else "Released"
 
 
 # Keypad Phase

@@ -48,6 +48,14 @@ class Lcd(Frame):
         self._equation_label = Label(self, bg="black", fg="white", font=("Courier New", 24), text="")
         self._equation_label.grid(row=5, column=0, columnspan=2, sticky=W)
 
+        # New label for displaying the question
+        self._lquestion = Label(self, bg="black", fg="white", font=("Courier New", 12), text="")
+        self._lquestion.grid(row=7, column=0, columnspan=2, sticky=W)
+
+        # New label for displaying the answer choices
+        self._lwires_choices = Label(self, bg="black", fg="white", font=("Courier New", 18), text="")
+        self._lwires_choices.grid(row=8, column=0, columnspan=2, sticky=W)
+
     def setTimer(self, timer):
         self._timer = timer
 
@@ -60,8 +68,11 @@ class Lcd(Frame):
     def setTimer(self, timer):
         self._timer = timer
 
-    def setButton(self, button):
-        self._button = button
+    def display_question(self, question):
+        self._lquestion.config(text=question)
+
+    def display_choices(self, choices):
+        self._lwires_choices.config(text="\n".join(choices))
 
 # Base Phase Thread
 class PhaseThread(Thread):
@@ -212,18 +223,78 @@ class Wires(PhaseThread):
         super().__init__(name)
         self._pins = pins
         self._gui = gui
-        self._solution = [True, False, True, False]  # Example solution
+        
+        # Define a list of questions
+        self._questions = [
+            {
+                "question": "What year was the University of Tampa founded?",
+                "choices": ["A. 1940", "B. 1931", "C. 1933", "D. 1924", "E. 2005"],
+                "correct": "B"
+            },
+            {
+                "question": "What was the cause of the first ever computer bug?",
+                "choices": ["A. Syntax error", "B. Logic error", "C. Server crash", "D. A real life bug", "E. None of the above"],
+                "correct": "D"
+            },
+            {
+                "question": "What was the first school with a computer science program?",
+                "choices": ["A. Harvard", "B. UPenn", "C. Princeton", "D. MIT", "E. Cambridge"],
+                "correct": "E"
+            },
+            {
+                "question": "Who is considered the first ever programmer?",
+                "choices": ["A. Rohan Khanad", "B. Murot Yildiz", "C. Ada Lovelace", "D. Dr. Kancharla", "E. Ricardo Almeida"],
+                "correct": "C"
+            }
+        ]
+        
+        # Select a random question once
+        self._current_question = random.choice(self._questions)
+        
+        # Display the question and choices
+        self._gui._lwires.config(text=self._current_question["question"])
+        self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))
+        
+        self._initial_state = True  # Indicates if all wires are intact
+        self._running = True
+        self._solved = False  # Flag to indicate if the question has been solved
 
     def run(self):
-        self._running = True
         while self._running:
+            # Read wire states
             self._value = [pin.value for pin in self._pins]
-            self._gui._lwires.config(text=f"Wires: {self._value}")
-            if self._value == self._solution:
-                self._gui._lwires.config(text="Wires: SOLVED!", fg="green")
-                break
+            self._gui._lwires.config(text=f"Wires: {self._value}")  # Show current wire states
+            
+            # Check if all wires are intact (assuming True means intact)
+            if all(pin.value for pin in self._pins):  # If all wires are intact (True)
+                self._initial_state = True
+                # Display the current question again if needed
+                if not self._solved:  # Only display if not solved
+                    self._gui._lwires.config(text=self._current_question["question"])
+                    self._gui._lwires_choices.config(text="\n".join(self._current_question["choices"]))
+            else:
+                self._initial_state = False  # At least one wire is cut
+
+            # Check if any wire is cut (assuming False means cut)
+            for index, pin in enumerate(self._pins):
+                if not pin.value:  # If this wire is cut (False)
+                    selected_wire = chr(65 + index)  # Convert index to corresponding letter A, B, C, D, E
+                    print(f"Detected cut on wire: {selected_wire}")  # Debugging line
+                    if selected_wire == self._current_question["correct"]:
+                        self._gui._lwires.config(text="Wires: SOLVED! Correct wire cut.", fg="green")
+                        print("Correct wire cut!")  # Debugging line
+                        self._solved = True  # Mark the question as solved
+                    else:
+                        self._gui._lwires.config(text=f"Wires: WRONG! Cut {selected_wire}. Try again.", fg="red")
+                        print(f"Wrong wire cut: {selected_wire}")  # Debugging line
+                    
+                    sleep(2)  # Pause for a moment to show the result
+                    break  # Exit the loop after one wire cut
+
             sleep(0.1)
 
+    def stop(self):
+        self._running = False  # Method to stop the thread safely       
 # Game State Manager
 class GameState:
     def __init__(self):
@@ -284,7 +355,7 @@ keypad_keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
 matrix_keypad = Matrix_Keypad(keypad_rows, keypad_cols, keypad_keys)
 keypad = Keypad(matrix_keypad, gui)
 
-wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23)]
+wire_pins = [DigitalInOut(i) for i in (board.D14, board.D15, board.D18, board.D23, board.D24)]
 for pin in wire_pins:
     pin.direction = Direction.INPUT
     pin.pull = Pull.DOWN

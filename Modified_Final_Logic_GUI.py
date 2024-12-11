@@ -276,7 +276,7 @@ class Keypad(Thread):
         while self._running:
             if self._keypad.pressed_keys:
                 key = self._keypad.pressed_keys[0]
-                self._keypad.clear_keys()
+                #self._keypad.clear_keys()
 
                 if key == "#":
                     self._value = self._value[:-1]

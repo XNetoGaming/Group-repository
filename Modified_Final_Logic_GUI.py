@@ -27,6 +27,7 @@ from adafruit_matrixkeypad import Matrix_Keypad #this one as well
 
 # Constants
 COUNTDOWN = 300
+PENALTY_TIME = 30 #Time penalty for wrong answers
 
 """
 # Utility Mock Classes
